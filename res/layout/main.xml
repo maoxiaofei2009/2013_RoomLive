@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:background="#ffffffff"
+    android:orientation="vertical" >
+
+    <RelativeLayout
+        android:layout_width="fill_parent"
+    	android:layout_height="70dip"
+    	android:background="@drawable/ic_bar_top">
+    	
+	    <ImageView
+	        android:id="@+id/person_head"
+	        android:layout_width="50dip"
+	        android:layout_height="50dip"
+	        android:padding="5dip"
+	        android:layout_marginLeft="10dip"
+	        android:layout_centerVertical="true"
+	        android:src="@drawable/ic_head_photo"
+	        android:background="@drawable/ic_head_background"/>  
+	        
+	    <RelativeLayout
+	        android:layout_width="wrap_content"
+	    	android:layout_height="wrap_content"
+	    	android:layout_marginLeft="10dip"
+	    	android:layout_centerVertical="true"
+	    	android:layout_toRightOf="@+id/person_head">
+		    <TextView 
+		        android:id="@+id/person_question"
+		        android:layout_width="wrap_content"
+		        android:layout_height="wrap_content"
+		        android:textColor="@color/text_color"
+		        android:text="where are you from?"/>  
+		        
+		   	<TextView 
+		        android:id="@+id/person_answer"
+		        android:layout_width="wrap_content"
+		        android:layout_height="wrap_content"
+		        android:layout_marginTop="1dip"
+		        android:layout_below="@+id/person_question"
+		        android:textColor="@color/text_color"
+		        android:text="I don\'t known"/> 
+	     </RelativeLayout>
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:layout_width="fill_parent"
+    	android:layout_height="fill_parent"
+    	android:layout_marginTop="20dip">
+	    
+        <Button 
+            android:id="@+id/main_new_card"
+            android:layout_width="fill_parent"
+    		android:layout_height="wrap_content"
+    		android:gravity="center"
+    		android:text="Create new card"/>
+    </RelativeLayout>
+    
+</LinearLayout>
