@@ -2,13 +2,13 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
-    android:background="#ffffffff"
+    android:background="@drawable/main_background"
     android:orientation="vertical" >
 
     <RelativeLayout
         android:layout_width="fill_parent"
     	android:layout_height="70dip"
-    	android:background="@drawable/ic_bar_top">
+    	android:background="@drawable/ic_top_bar">
     	
 	    <ImageView
 	        android:id="@+id/person_head"
@@ -31,7 +31,7 @@
 		        android:layout_width="wrap_content"
 		        android:layout_height="wrap_content"
 		        android:textColor="@color/text_color"
-		        android:text="where are you from?"/>  
+		        android:text="I don\'t care."/>  
 		        
 		   	<TextView 
 		        android:id="@+id/person_answer"
@@ -40,21 +40,23 @@
 		        android:layout_marginTop="1dip"
 		        android:layout_below="@+id/person_question"
 		        android:textColor="@color/text_color"
-		        android:text="I don\'t known"/> 
+		        android:text="Where are you now."/> 
 	     </RelativeLayout>
     </RelativeLayout>
 
     <RelativeLayout
         android:layout_width="fill_parent"
     	android:layout_height="fill_parent"
-    	android:layout_marginTop="20dip">
-	    
-        <Button 
-            android:id="@+id/main_new_card"
+    	android:layout_marginTop="10dip">
+        
+        <GridView 
+            android:id="@+id/main_grid_view"
             android:layout_width="fill_parent"
-    		android:layout_height="wrap_content"
-    		android:gravity="center"
-    		android:text="Create new card"/>
+    		android:layout_height="fill_parent"
+    		android:verticalSpacing="10dip"
+    		android:numColumns="auto_fit"
+	      	android:stretchMode="columnWidth"
+    		android:cacheColorHint="#00000000"/>
     </RelativeLayout>
     
 </LinearLayout>

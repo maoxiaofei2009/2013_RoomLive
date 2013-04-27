@@ -1,102 +1,99 @@
 package abs.android.live.utils;
 
-import android.graphics.Camera;
-import android.graphics.Matrix;
 import android.view.View;
 import android.view.animation.AccelerateInterpolator;
 import android.view.animation.Animation;
-import android.view.animation.AnimationSet;
-import android.view.animation.Transformation;
-import android.view.animation.TranslateAnimation;
 
 
 public class AnimHelper{
-	private final static int ANIM_DURATION = 600;
-	public static enum AnimType{
-		SCALE_IN,
-		SCALE_OUT,
-		TRANS_UP,
-		TRANS_DOWN
+	private final static int ANIM_DURATION = 350;
+	private AnimListener mAnimListener;
+	public void initCardRotateViewe(View frontView, View behindView){
+		if (mAnimListener == null){
+			mAnimListener = new AnimListener(frontView, behindView);
+		}
 	}
-	
-	public static void startTransferAnim(View view, AnimType type){
-		float fromYValue = 0;
-		float toYValue = 0;
-		if (type == AnimType.TRANS_UP){
-			fromYValue = 1.0f;
-			toYValue = 0.0f;
-		}else if(type == AnimType.TRANS_DOWN){
-			fromYValue = 0.0f;
-			toYValue = 1.0f;
-		}	
-		
-		TranslateAnimation transAnim = new TranslateAnimation(
-				Animation.RELATIVE_TO_SELF, 0.0f, 
-				Animation.RELATIVE_TO_SELF, 0.0f,
-				Animation.RELATIVE_TO_SELF, fromYValue, 
-				Animation.RELATIVE_TO_SELF, toYValue);
-		
-		transAnim.setInterpolator(new AccelerateInterpolator()); 
-		AnimationSet animSet = new AnimationSet(true);
-        animSet.addAnimation(transAnim);  
-        animSet.setFillAfter(true);
-        animSet.setDuration(ANIM_DURATION);
+    /**
+     * Setup a new 3D rotation on the container view.
+     *
+     * @param position the item that was clicked to show a picture, or -1 to show the list
+     * @param start the start angle at which the rotation must begin
+     * @param end the end angle of the rotation
+     */
+    public void applyRotationFirst(View view, float start, float end, boolean reversed) {
+        // Find the center of the container
+        final float centerX = view.getWidth() / 2.0f;
+        final float centerY = view.getHeight() / 2.0f;
+
+        // Create a new 3D rotation with the supplied parameter
+        // The animation listener is used to trigger the next animation
+        final Rotate3dAnimation rotation =
+                new Rotate3dAnimation(start, end, centerX, centerY, 310.0f, reversed);
+        rotation.setDuration(ANIM_DURATION);
+        //rotation.setFillAfter(true);
+        rotation.setInterpolator(new AccelerateInterpolator());
+        rotation.setAnimationListener(mAnimListener);
+
+        view.startAnimation(rotation);
+    }
+    
+	  /**
+     * This class listens for the end of the first half of the animation.
+     * It then posts a new action that effectively swaps the views when the container
+     * is rotated 90 degrees and thus invisible.
+     */
+    private final class AnimListener implements Animation.AnimationListener {
+        private final View mFrontView;
+        private final View mBehindView;
+        private boolean mViewReversed = false;
         
-        view.startAnimation(animSet);
-		
-	}
-	
-	
-	public static class Rotate3d extends Animation {
-		private final float mFromDegrees;
-		private final float mToDegrees;
-		private final float mCenterX;
-		private final float mCenterY;
-		private final float mDepthZ;
-		private final boolean mReverse;
-		private Camera mCamera;
+        private AnimListener(View frontView, View behindView) {
+        	mFrontView = frontView;
+        	mBehindView = behindView;
+        }
 
-		public Rotate3d(float fromDegrees, float toDegrees, float centerX,
-				float centerY, float depthZ, boolean reverse) {
-			mFromDegrees = fromDegrees;
-			mToDegrees = toDegrees;
-			mCenterX = centerX;
-			mCenterY = centerY;
-			mDepthZ = depthZ;
-			mReverse = reverse;
-		}
+        public void onAnimationStart(Animation animation) {
+        	
+        }
 
-		@Override
-		public void initialize(int width, int height, int parentWidth,
-				int parentHeight) {
-			super.initialize(width, height, parentWidth, parentHeight);
-			mCamera = new Camera();
-		}
+        public void onAnimationEnd(Animation animation) {
+        	if (!mViewReversed){
+        		mFrontView.setVisibility(View.INVISIBLE);
+        		mBehindView.setVisibility(View.VISIBLE);
+        		applyRotationSecond(mBehindView, (Integer)mBehindView.getTag(), 0, false);
+        		mViewReversed = true;
+        	}else{
+        		mFrontView.setVisibility(View.VISIBLE);
+        		mBehindView.setVisibility(View.INVISIBLE);
+        		applyRotationSecond(mFrontView, (Integer)mFrontView.getTag(), 0, false);
+        		mViewReversed = false;
+        	}
+        }
 
-		@Override
-		protected void applyTransformation(float interpolatedTime, Transformation t) {
-			final float fromDegrees = mFromDegrees;
-			float degrees = fromDegrees
-					+ ((mToDegrees - fromDegrees) * interpolatedTime);
-			final float centerX = mCenterX;
-			final float centerY = mCenterY;
-			final Camera camera = mCamera;
-			final Matrix matrix = t.getMatrix();
-			camera.save();
-			if (mReverse) {
-				camera.translate(0.0f, 0.0f, mDepthZ * interpolatedTime);
-			} else {
-				camera.translate(0.0f, 0.0f, mDepthZ * (1.0f - interpolatedTime));
-			}
+        public void onAnimationRepeat(Animation animation) {
+        }
+    }
+    
+    
+    /**
+     * Setup a new 3D rotation on the container view.
+     *
+     * @param position the item that was clicked to show a picture, or -1 to show the list
+     * @param start the start angle at which the rotation must begin
+     * @param end the end angle of the rotation
+     */
+    private void applyRotationSecond(View view, float start, float end, boolean reversed) {
+        // Find the center of the container
+        final float centerX = view.getWidth() / 2.0f;
+        final float centerY = view.getHeight() / 2.0f;
 
-			camera.rotateY(degrees);
-			camera.getMatrix(matrix);
-			camera.restore();
+        // Create a new 3D rotation with the supplied parameter
+        // The animation listener is used to trigger the next animation
+        final Rotate3dAnimation rotation =
+                new Rotate3dAnimation(start, end, centerX, centerY, 310.0f, reversed);
+        rotation.setDuration(ANIM_DURATION);
+        rotation.setInterpolator(new AccelerateInterpolator());
 
-			//matrix.preTranslate(-centerX, -centerY);
-			//matrix.postTranslate(centerX, centerY);
-			matrix.preTranslate(-centerX, -centerY);
-			matrix.postTranslate(centerX, centerY);
-		}
-	}
+        view.startAnimation(rotation);
+    }
 }

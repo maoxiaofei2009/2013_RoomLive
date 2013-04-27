@@ -1,8 +1,11 @@
 package abs.android.live;
 
+import abs.android.live.utils.AnimHelper;
+import abs.android.live.utils.GestrueHelper;
+import abs.android.live.utils.GestrueHelper.FLING_DIRECTION;
+import abs.android.live.utils.GestrueHelper.FlingCallback;
 import abs.android.live.utils.LogUtils;
 import abs.android.live.utils.ResolutionManager;
-import abs.android.live.utils.Rotate3dAnimation;
 import abs.android.live.utils.Utils;
 import android.app.Activity;
 import android.os.Bundle;
@@ -12,20 +15,24 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.view.WindowManager;
-import android.view.animation.AccelerateInterpolator;
-import android.view.animation.Animation;
-import android.view.animation.DecelerateInterpolator;
+import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.RelativeLayout.LayoutParams;
 
-public class CardEditActivity extends BaseActivity {
+public class CardEditActivity extends BaseActivity implements OnClickListener{
 	private static final String TAG = "CardEditActivity";
 	private static final float RATIO_WIDTH_TO_HEIGHT = 1.5f;
 	private View mRootView;
+	private ImageView mEditBtn;
 	private View mContainer;
 	private ViewGroup mCardFrontView;
 	private ViewGroup mCardBehindView;
-	private DisplayNextView mDisplayNextView;
+	
+	private View mCardDetailView;
+	
+	
+	private AnimHelper mAnimHelper;
+	private GestrueHelper mGestrueHelper;
 	private int mContainerWidth = 0;
 	private int mContainerHeight = 0;
 	
@@ -36,21 +43,14 @@ public class CardEditActivity extends BaseActivity {
         setContentView(R.layout.card);
         
         initUI();
+        initObject();
     }
     
     private void initUI(){
     	mRootView = findViewById(R.id.card_root);
+    	mEditBtn = (ImageView) findViewById(R.id.head_right_button);
+    	mEditBtn.setOnClickListener(this);
     	mContainer = findViewById(R.id.card_view);
-    	mContainer.setOnClickListener(new OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				if (mCardFrontView.getVisibility() == View.VISIBLE){
-					applyRotation(mCardFrontView, 0, 90, true);
-				}else{
-					applyRotation(mCardBehindView, 0, 90, true);
-				}
-			}
-		});
     	mCardFrontView = (ViewGroup) findViewById(R.id.card_front_page);
     	mCardFrontView.setPersistentDrawingCache(ViewGroup.PERSISTENT_ANIMATION_CACHE);
     	mCardBehindView = (ViewGroup) findViewById(R.id.card_behind_page);
@@ -59,10 +59,37 @@ public class CardEditActivity extends BaseActivity {
     	adjustCardArea(mRootView, mContainer, this);
     	adjustCardContent();
     	
-    	
-    	mDisplayNextView = new DisplayNextView(mCardFrontView, mCardBehindView);
+    	mCardDetailView = findViewById(R.id.card_detail);
     }
     
+    private void initObject(){
+    	mAnimHelper = new AnimHelper();
+    	mAnimHelper.initCardRotateViewe(mCardFrontView, mCardBehindView);
+    	
+    	mGestrueHelper = new GestrueHelper(this);
+    	mGestrueHelper.setFlingCallback(mContainer, new FlingCallback() {	
+			@Override
+			public void onFling(FLING_DIRECTION direction) {
+				if (direction == FLING_DIRECTION.LEFT){
+					if (mCardFrontView.getVisibility() == View.VISIBLE){
+						mAnimHelper.applyRotationFirst(mCardFrontView, 0, 90, true);
+						mCardBehindView.setTag(-90);
+					}else{
+						mAnimHelper.applyRotationFirst(mCardBehindView, 0, 90, true);
+						mCardFrontView.setTag(-90);
+					}
+				}else{
+					if (mCardFrontView.getVisibility() == View.VISIBLE){
+						mAnimHelper.applyRotationFirst(mCardFrontView, 0, -90, true);
+						mCardBehindView.setTag(90);
+					}else{
+						mAnimHelper.applyRotationFirst(mCardBehindView, 0, -90, true);
+						mCardFrontView.setTag(90);
+					}
+				}
+			}
+		});
+    }
     
 	/**
 	 * scale the DmcFileView with the same ratio with 854x480
@@ -132,111 +159,31 @@ public class CardEditActivity extends BaseActivity {
     	scaleViewById(R.id.card_postal_code_sender, manager);
     }
 
-    /**
-     * Setup a new 3D rotation on the container view.
-     *
-     * @param position the item that was clicked to show a picture, or -1 to show the list
-     * @param start the start angle at which the rotation must begin
-     * @param end the end angle of the rotation
-     */
-    private void applyRotation(View view, float start, float end, boolean reversed) {
-        // Find the center of the container
-        final float centerX = view.getWidth() / 2.0f;
-        final float centerY = view.getHeight() / 2.0f;
 
-        // Create a new 3D rotation with the supplied parameter
-        // The animation listener is used to trigger the next animation
-        final Rotate3dAnimation rotation =
-                new Rotate3dAnimation(start, end, centerX, centerY, 310.0f, reversed);
-        rotation.setDuration(350);
-        //rotation.setFillAfter(true);
-        rotation.setInterpolator(new AccelerateInterpolator());
-        rotation.setAnimationListener(mDisplayNextView);
-
-        view.startAnimation(rotation);
+    private void swicthCardDetail(){
+		if (mCardDetailView.getVisibility() ==  View.GONE){
+			mCardDetailView.setVisibility(View.VISIBLE);
+			mEditBtn.setBackgroundResource(R.drawable.card_done_drawable);
+		}else{
+			mCardDetailView.setVisibility(View.GONE);
+			mEditBtn.setBackgroundResource(R.drawable.card_edit_drawable);
+		}
     }
+
+	@Override
+	public void onClick(View v) {
+		if (v == mEditBtn){
+			swicthCardDetail();
+		}
+	}
 	
-	  /**
-     * This class listens for the end of the first half of the animation.
-     * It then posts a new action that effectively swaps the views when the container
-     * is rotated 90 degrees and thus invisible.
-     */
-    private final class DisplayNextView implements Animation.AnimationListener {
-        private final View mFrontView;
-        private final View mBehindView;
-        private boolean mViewReversed = false;
-        private boolean mViewRotated = false;
-        
-        private DisplayNextView(View frontView, View behindView) {
-        	mFrontView = frontView;
-        	mBehindView = behindView;
-        }
-
-        public void onAnimationStart(Animation animation) {
-        	
-        }
-
-        public void onAnimationEnd(Animation animation) {
-        	if (mViewRotated){
-        		mViewRotated = false;
-        		return;
-        	}
-        	
-        	if (!mViewReversed){
-        		mCardBehindView.setVisibility(View.VISIBLE);
-        		mCardFrontView.setVisibility(View.INVISIBLE);
-        		applyRotation(mCardBehindView, -90, 0, false);
-        		mViewReversed = true;
-        		mViewRotated = true;
-        	}else{
-        		mCardFrontView.setVisibility(View.VISIBLE);
-        		mCardBehindView.setVisibility(View.INVISIBLE);
-        		applyRotation(mCardFrontView, -90, 0, false);
-        		mViewReversed = false;
-        		mViewRotated = true;
-        	}
-            //mContainer.post(new SwapViews(mPosition));
-        }
-
-        public void onAnimationRepeat(Animation animation) {
-        }
-    }
-
-    /**
-     * This class is responsible for swapping the views and start the second
-     * half of the animation.
-     */
-    private final class SwapViews implements Runnable {
-        private final int mPosition;
-
-        public SwapViews(int position) {
-            mPosition = position;
-        }
-
-        public void run() {
-            final float centerX = mContainer.getWidth() / 2.0f;
-            final float centerY = mContainer.getHeight() / 2.0f;
-            Rotate3dAnimation rotation;
-            
-            if (mPosition > -1) {
-            	mCardFrontView.setVisibility(View.GONE);
-            	mCardBehindView.setVisibility(View.VISIBLE);
-            	mCardBehindView.requestFocus();
-
-                rotation = new Rotate3dAnimation(90, 180, centerX, centerY, 310.0f, false);
-            } else {
-            	mCardBehindView.setVisibility(View.GONE);
-                mCardFrontView.setVisibility(View.VISIBLE);
-                mCardFrontView.requestFocus();
-
-                rotation = new Rotate3dAnimation(90, 0, centerX, centerY, 310.0f, false);
-            }
-
-            rotation.setDuration(500);
-            rotation.setFillAfter(true);
-            rotation.setInterpolator(new DecelerateInterpolator());
-
-            mContainer.startAnimation(rotation);
-        }
-    }
+	
+	@Override
+	public void onBackPressed() {
+		if (mCardDetailView.getVisibility() !=  View.GONE){
+			swicthCardDetail();
+			return;
+		}
+		super.onBackPressed();
+	}
 }
